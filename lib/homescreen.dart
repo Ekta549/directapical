@@ -14,6 +14,25 @@ class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> users = [];
 
   @override
+  void initState() {
+    super.initState();
+    // Call your API here
+    fetchDataFromApi();
+  }
+
+  Future<void> fetchDataFromApi() async {
+    final response = await http.get(Uri.parse('https://randomuser.me/api/?results=10'));
+
+    if (response.statusCode == 200) {
+      setState(() {
+        users = json.decode(response.body)['results'];
+      });
+    } else {
+      // Handle error scenario
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -23,33 +42,19 @@ class _HomeScreenState extends State<HomeScreen> {
         itemCount: users.length,
         itemBuilder: (context, index) {
           final user = users[index];
+          final name = user['name']['first'];
           final email = user['email'];
+          final imageUrl = user['picture']['thumbnail'];
           return ListTile(
-            title: Text(email),
+            leading: ClipRRect(
+              borderRadius: BorderRadius.circular(100),
+              child: Image.network(imageUrl),
+            ),
+            title: Text(name), // Display the user's first name
+            subtitle: Text(email),
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: fetchUsers, // Now you can reference fetchUsers directly
-        child: const Icon(Icons.refresh),
-      ),
     );
   }
-
-  void fetchUsers() async {
-    const url = 'https://randomuser.me/api/?results=10'; // Reduced the number of results for demonstration
-    final uri = Uri.parse(url);
-    final response = await http.get(uri);
-    final body = response.body;
-    final jsonData = jsonDecode(body);
-    setState(() {
-      users = jsonData['results'];
-    });
-  }
-}
-
-void main() {
-  runApp(const MaterialApp(
-    home:  HomeScreen(),
-  ));
 }
